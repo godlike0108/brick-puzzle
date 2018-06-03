@@ -148,6 +148,8 @@ export default {
           y: this.mouse.y - this.cBrick.size / 2
         };
       }
+      // refresh queue if empty
+      this.refreshQueue();
     },
 
     render() {
@@ -225,7 +227,8 @@ export default {
 
     checkBrickCollision(pos, data) {
       for(let i = 0; i < data.length; i++) {
-        for(let j = 0; j < data.length; j++) {
+        for(let j = 0; j < data[i].length; j++) {
+          if(pos.row + i > this.field.row - 1 || pos.col + 1 > this.field.col - 1) continue;
           if(this.field.data[pos.row + i][pos.col + j] === 1 && data[i][j] === 1) {
             return true;
           }
@@ -236,7 +239,7 @@ export default {
 
     putBrickInField(pos, data) {
       for(let i = 0; i < data.length; i++) {
-        for(let j = 0; j < data.length; j++) {
+        for(let j = 0; j < data[i].length; j++) {
           if(data[i][j] === 1) {
             this.field.data[pos.row + i][pos.col + j] = 1;
           }
