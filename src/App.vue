@@ -16,6 +16,8 @@ export default {
     return {
       x: null,                  // game position x
       y: null,                  // game position y
+      canvas: null,             // canvas DOM
+      ctx: null,                // canvas context
       loop: null,               // game loop
       border: 20,               // border
       background: {
@@ -49,7 +51,8 @@ export default {
         width: null,
         height: 200,
         color: '#f5f5f5',
-        data: null
+        data: null,
+        length: 3,              // max length
       },
       brickInQueue: {           // brick in queue preference
         outerW: null,
@@ -64,10 +67,13 @@ export default {
         borderColor: '#fff',
         color: 'f5f5f5'
       },
-      queueMaxLength: 3,        // queue max length
-      cBrick: null,             // current brick
-      brickSize: 60,            // brick size
-      ctx: null,                // canvas context
+      cBrick: {                 // current brick
+        size: null,
+        index: null,
+        data: null
+      },
+      isDrag: false,            // check if user is dragging brick
+      mouse: null               // current mouse position
     }
   },
   methods: {
@@ -78,7 +84,8 @@ export default {
       // create brick queue data
       this.brickQueue.data = [];
       this.refreshQueue();
-
+      // hook DOM
+      this.canvas = document.querySelector('#game');
       // get context
       this.ctx = document.querySelector('#game').getContext('2d');
       // set canvas width/height
@@ -107,6 +114,8 @@ export default {
       this.brickInQueue.innerW = this.brickInQueue.outerW - this.brickInQueue.padding * 2;
       this.brickInQueue.innerH = this.brickInQueue.outerH - this.brickInQueue.padding * 2;
       this.brickInQueue.size = this.brickInQueue.innerW / 5;
+      // set current brick UI
+      this.cBrick.size = this.brick.size * 5;
       // render UIs
       this.renderUI(this.background);
       this.renderUI(this.menuBar);
@@ -136,14 +145,24 @@ export default {
     },
 
     render() {
-
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      this.renderUI(this.background);
+      this.renderUI(this.menuBar);
+      this.renderUI(this.field);
+      this.renderUI(this.brickQueue);
+      this.renderField(this.field.data);
+      this.renderBrickQueue(this.brickQueue.data);
+      if(this.isDrag) {
+        // render current brick at mouse position
+        this.renderCBrick(this.cBrick.data);
+      }
     },
 
     start() {
       this.loop = requestAnimationFrame(this.game);
     },
 
-    pause() {
+    togglePause() {
       if(this.loop) {
         cancelAnimationFrame(this.loop);
         this.loop = null;
@@ -152,15 +171,39 @@ export default {
       }
     },
 
+    checkAInB(a, b) {
+      if(a.x < b.left || a.x > b.right || a.y < b.top || a.y > b.bottom) return false;
+      return true;
+    },
+
+    getBrickIndex(mouse) {
+      let bricks = [];
+      for(let i = 0; i < this.brickQueue.length; i++) {
+        let brick = {};
+        brick.left = this.brickQueue.x + this.brickInQueue.outerW * i;
+        brick.right = this.brickQueue.x + this.brickInQueue.outerW * (i+1);
+        brick.top = this.brickQueue.y;
+        brick.bottom = this.brickQueue.y + this.brickInQueue.outerH;
+        bricks.push(brick);
+      }
+
+      if(this.checkAInB(mouse, bricks[0])) return 0;
+      if(this.checkAInB(mouse, bricks[1])) return 1;
+      if(this.checkAInB(mouse, bricks[2])) return 2;
+      return null;
+    },
+
     refreshQueue() {
       if(this.brickQueue.data && this.brickQueue.data.length === 0) {
         let brickGenerator = brickGenerator || new BrickGenerator();
-        for(let i = 0; i < this.queueMaxLength; i++) {
+        for(let i = 0; i < this.brickQueue.length; i++) {
           let newBrick = brickGenerator.generate();
           this.brickQueue.data.push(newBrick);
         }
       }
     },
+
+    /* Rendering */
     renderUI(part) {
       this.ctx.save();
       this.ctx.fillStyle = part.color;
@@ -172,7 +215,7 @@ export default {
       this.ctx.save();
       this.ctx.strokeStyle = this.brick.borderColor;
       this.ctx.fillStyle = this.brick.color;
-      this.ctx.translate(this.field.x, this.field.y)
+      this.ctx.translate(this.field.x, this.field.y);
       let size = this.brick.size;
       for(let i = 0; i < data.length; i++) {
         for(let j = 0; j < data[i].length; j++) {
@@ -204,14 +247,60 @@ export default {
       })
       this.ctx.restore();
     },
-
+    renderCBrick(data) {
+      this.ctx.save();
+      this.ctx.strokeStyle = this.brick.borderColor;
+      this.ctx.fillStyle = this.brick.color;
+      this.ctx.translate(this.mouse.x-this.cBrick.size/2, this.mouse.y-this.cBrick.size/2);
+      for(let i = 0; i < data.length; i++) {
+        for(let j = 0; j < data[i].length; j++) {
+          if(data[i][j] !== 1) continue;
+          let size = this.brick.size;
+          let x = size * j;
+          let y = size * i;
+          this.ctx.fillRect(x, y, size ,size);
+          this.ctx.strokeRect(x, y, size, size);
+        }
+      }
+      this.ctx.restore();
+    },
+    /* Handlers */
     // hook event handlers
     hookHandlers() {
-      addEventListener('keyup', e => {
+      // pause
+      window.addEventListener('keyup', e => {
         if(e.keyCode === 80) {
-          this.pause()
+          this.togglePause()
         }
-      })
+      });
+
+      // mouse down
+      this.canvas.addEventListener('mousedown', e => {
+        this.mouse = {
+          x: e.offsetX,
+          y: e.offsetY
+        }
+        // find the brick index
+        let index = this.getBrickIndex(this.mouse);
+        if(index === null) return;
+        if(this.brickQueue.data.length > index) {
+          // copy the brick in queue
+          this.cBrick.index = index;
+          this.cBrick.data = JSON.parse(JSON.stringify(this.brickQueue.data[index]));
+          // kill the copied brick in queue
+          this.brickQueue.data.splice(index, 1);
+          // turn on drag flag
+          this.isDrag = true;
+        }
+      });
+      // mouse up to cancel drag
+      this.canvas.addEventListener('mouseup', e => {
+        // turn off drag mode
+        this.isDrag = false;
+        // recover the brick
+        let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
+        this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
+      });
     }
   }
 }
