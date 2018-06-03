@@ -293,6 +293,14 @@ export default {
           this.isDrag = true;
         }
       });
+      this.canvas.addEventListener('mousemove', e => {
+        if(this.isDrag) {
+          this.mouse = {
+            x: e.offsetX,
+            y: e.offsetY
+          }
+        }
+      });
       // mouse up to cancel drag
       this.canvas.addEventListener('mouseup', e => {
         // turn off drag mode
