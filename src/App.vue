@@ -70,6 +70,7 @@ export default {
       cBrick: {                 // current brick
         size: null,
         index: null,
+        position: null,
         data: null
       },
       isDrag: false,            // check if user is dragging brick
@@ -134,14 +135,19 @@ export default {
 
       this.update();
       this.render();
-      console.log(this.loop)
 
       this.loop = requestAnimationFrame(this.game)
 
     },
 
     update() {
-
+      // update current brick position if dragging
+      if(this.isDrag) {
+        this.cBrick.position = {
+          x: this.mouse.x - this.cBrick.size / 2,
+          y: this.mouse.y - this.cBrick.size / 2
+        };
+      }
     },
 
     render() {
@@ -191,6 +197,51 @@ export default {
       if(this.checkAInB(mouse, bricks[1])) return 1;
       if(this.checkAInB(mouse, bricks[2])) return 2;
       return null;
+    },
+
+    getMatchedPosition(pos) {
+      // get matched row and col index
+      let sX = Math.floor((pos.x - this.field.x) / this.brick.size);
+      let sY = Math.floor((pos.y - this.field.y) / this.brick.size);
+
+      let modX = (sX <= -1) ? (pos.x - this.field.x + this.brick.size) % this.brick.size : (pos.x - this.field.x) % this.brick.size;
+      let modY = (sY <= -1) ? (pos.y - this.field.y + this.brick.size) % this.brick.size : (pos.y - this.field.y) % this.brick.size;
+
+      if(modX > this.brick.size/2) {sX++}
+      if(modY > this.brick.size/2) {sY++}
+
+      return {
+        row: sY,
+        col: sX
+      }
+    },
+
+    checkInField(pos) {
+      if(pos.col < 0 || pos.col > this.field.col - 1 || pos.row < 0 || pos.row > this.field.row - 1) {
+        return false;
+      }
+      return true;
+    },
+
+    checkBrickCollision(pos, data) {
+      for(let i = 0; i < data.length; i++) {
+        for(let j = 0; j < data.length; j++) {
+          if(this.field.data[pos.row + i][pos.col + j] === 1 && data[i][j] === 1) {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+
+    putBrickInField(pos, data) {
+      for(let i = 0; i < data.length; i++) {
+        for(let j = 0; j < data.length; j++) {
+          if(data[i][j] === 1) {
+            this.field.data[pos.row + i][pos.col + j] = 1;
+          }
+        }
+      }
     },
 
     refreshQueue() {
@@ -305,9 +356,16 @@ export default {
       this.canvas.addEventListener('mouseup', e => {
         // turn off drag mode
         this.isDrag = false;
-        // recover the brick
-        let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
-        this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
+        // get brick position
+        let brickPos = this.getMatchedPosition(this.cBrick.position);
+        if(this.checkInField(brickPos) && !this.checkBrickCollision(brickPos, this.cBrick.data)) {
+          // put brick in field
+          this.putBrickInField(brickPos, this.cBrick.data);
+        } else {
+          // recover the brick
+          let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
+          this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
+        }
       });
     }
   }
