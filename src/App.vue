@@ -74,13 +74,37 @@ export default {
       brick: {                  // brick preference
         size: 60,
         borderColor: '#fff',
-        color: 'f5f5f5'
+        color: '#2e2d2d'
       },
       cBrick: {                 // current brick
         size: null,
         index: null,
         position: null,
         data: null
+      },
+      gameOver: {
+        x: null,
+        y: null,
+        width: null,
+        height: null,
+        color: '#f00',
+        textX: 30,
+        textY: 160,
+        textColor: '#fff',
+        style: '900 72px Avenir, Helvetica, Arial, sans-serif',
+        text: 'GAME OVER'
+      },
+      restartBtn: {
+        x: null,
+        y: null,
+        width: null,
+        height: 60,
+        color: '#eedc00',
+        textX: 26,
+        textY: 44,
+        textColor: '#2e2d2d',
+        style: '900 36px Avenir, Helvetica, Arial, sans-serif',
+        text: 'RESTART'
       },
       isDrag: false,            // check if user is dragging brick
       mouse: null               // current mouse position
@@ -130,6 +154,15 @@ export default {
       this.brickInQueue.size = this.brickInQueue.innerW / 5;
       // set current brick UI
       this.cBrick.size = this.brick.size * 5;
+      // set GAMEOVER UI
+      this.gameOver.width = this.background.width * 0.8;
+      this.gameOver.height = this.background.height * 0.4;
+      this.gameOver.x = this.background.width / 2 - this.gameOver.width / 2;
+      this.gameOver.y = this.background.height / 2 - this.gameOver.height / 2;
+      // set restart button UI
+      this.restartBtn.width = this.gameOver.width * 0.4;
+      this.restartBtn.x = this.background.width / 2 - this.restartBtn.width / 2;
+      this.restartBtn.y = this.gameOver.y + this.gameOver.height / 2 + this.restartBtn.height;
       // render UIs
       this.renderUI(this.background);
       this.renderUI(this.menuBar);
@@ -190,6 +223,10 @@ export default {
       if(this.isDrag) {
         // render current brick at mouse position
         this.renderCBrick(this.cBrick.data);
+      }
+      if(this.status === 0) {
+        this.renderGameOver();
+        this.renderRestartBtn();
       }
     },
 
@@ -413,6 +450,22 @@ export default {
           this.ctx.strokeRect(x, y, size, size);
         }
       }
+      this.ctx.restore();
+    },
+    renderGameOver() {
+      this.ctx.save();
+      this.renderUI(this.gameOver);
+      this.ctx.font = this.gameOver.style;
+      this.ctx.fillStyle = this.gameOver.textColor;
+      this.ctx.fillText(this.gameOver.text, this.gameOver.x + this.gameOver.textX, this.gameOver.y + this.gameOver.textY);
+      this.ctx.restore();
+    },
+    renderRestartBtn() {
+      this.ctx.save();
+      this.renderUI(this.restartBtn);
+      this.ctx.font = this.restartBtn.style;
+      this.ctx.fillStyle = this.restartBtn.textColor;
+      this.ctx.fillText(this.restartBtn.text, this.restartBtn.x + this.restartBtn.textX, this.restartBtn.y + this.restartBtn.textY);
       this.ctx.restore();
     },
     /* Handlers */
