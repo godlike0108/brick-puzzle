@@ -144,7 +144,7 @@ export default {
       // update current brick position if dragging
       if(this.isDrag) {
         this.cBrick.position = {
-          x: this.mouse.x - this.cBrick.size / 2,
+          x: this.mouse.x - this.cBrick.size / 5,
           y: this.mouse.y - this.cBrick.size / 2
         };
       }
@@ -228,10 +228,12 @@ export default {
     checkBrickCollision(pos, data) {
       for(let i = 0; i < data.length; i++) {
         for(let j = 0; j < data[i].length; j++) {
-          if(pos.row + i > this.field.row - 1 || pos.col + 1 > this.field.col - 1) continue;
-          if(this.field.data[pos.row + i][pos.col + j] === 1 && data[i][j] === 1) {
-            return true;
-          }
+          if(data[i][j] === 0) continue;
+          console.log(i, j, data[i][j])
+          if(pos.row + i < 0 || pos.row + i > this.field.row - 1 || pos.col + j < 0 || pos.col + j > this.field.col - 1) return true;
+          console.log(pos.row + i, pos.col + j)
+          if(this.field.data[pos.row + i][pos.col + j] === 1) return true;
+          console.log('here')
         }
       }
       return false;
@@ -305,7 +307,7 @@ export default {
       this.ctx.save();
       this.ctx.strokeStyle = this.brick.borderColor;
       this.ctx.fillStyle = this.brick.color;
-      this.ctx.translate(this.mouse.x-this.cBrick.size/2, this.mouse.y-this.cBrick.size/2);
+      this.ctx.translate(this.cBrick.position.x, this.cBrick.position.y);
       for(let i = 0; i < data.length; i++) {
         for(let j = 0; j < data[i].length; j++) {
           if(data[i][j] !== 1) continue;
