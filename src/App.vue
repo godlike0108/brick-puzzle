@@ -19,6 +19,7 @@ export default {
       canvas: null,             // canvas DOM
       ctx: null,                // canvas context
       loop: null,               // game loop
+      status: null,             // ingame: 1, gameover: 0
       border: 20,               // border
       background: {
         x: null,
@@ -43,7 +44,8 @@ export default {
         row: 10,
         col: 10,
         color: '#4b4b4b',
-        data: null
+        data: null,
+        full:null
       },
       brickQueue: {             // queue preference
         x: null,
@@ -79,9 +81,13 @@ export default {
   },
   methods: {
     init() {
+      // set score
+      this.score = 0;
       // create brick field data
       let fieldGenerator = fieldGenerator || new FieldGenerator(this.field.row, this.field.col);
       this.field.data = fieldGenerator.generate();
+      // init field fulled array
+      this.field.full = [];
       // create brick queue data
       this.brickQueue.data = [];
       this.refreshQueue();
@@ -130,6 +136,16 @@ export default {
       this.start();
 
     },
+    restart() {
+      // clear score
+      this.score = 0;
+      // clear field
+      this.field.data = fieldGenerator.generate();
+      // refresh queue
+      this.refreshQueue();
+      // start game
+      this.start();
+    },
     /*.game loop */
     game() {
 
@@ -150,6 +166,8 @@ export default {
       }
       // refresh queue if empty
       this.refreshQueue();
+      // clean fulled field
+      this.cleanFullField();
     },
 
     render() {
@@ -167,7 +185,10 @@ export default {
     },
 
     start() {
-      this.loop = requestAnimationFrame(this.game);
+      this.status = 1;
+      if(!this.loop) {
+        this.loop = requestAnimationFrame(this.game);
+      }
     },
 
     togglePause() {
@@ -229,11 +250,8 @@ export default {
       for(let i = 0; i < data.length; i++) {
         for(let j = 0; j < data[i].length; j++) {
           if(data[i][j] === 0) continue;
-          console.log(i, j, data[i][j])
           if(pos.row + i < 0 || pos.row + i > this.field.row - 1 || pos.col + j < 0 || pos.col + j > this.field.col - 1) return true;
-          console.log(pos.row + i, pos.col + j)
           if(this.field.data[pos.row + i][pos.col + j] === 1) return true;
-          console.log('here')
         }
       }
       return false;
@@ -257,6 +275,64 @@ export default {
           this.brickQueue.data.push(newBrick);
         }
       }
+    },
+
+    checkRowFull(row) {
+      return row.every(value => value === 1);
+    },
+
+    checkColFull(data, colIndex) {
+      return data.every(row => row[colIndex] === 1);
+    },
+
+    checkFieldFull(data) {
+      // check if row is full, add to full array
+      data.forEach((row, index) => {
+        if(this.checkRowFull(row)) {
+          this.field.full.push(index);
+        }
+      });
+      // if col is full ,add to col array
+      for(let col = 0; col < this.field.col; col++) {
+        if(this.checkColFull(data, col)) {
+          this.field.full.push(col + this.field.row);
+        }
+      }
+    },
+
+    cleanFullField() {
+      if(this.field.full.length === 0) return;
+        // get the field index
+      let index = this.field.full.shift();
+      if(index < this.field.row) {
+        for(let i = 0; i < this.field.data[index].length; i++) {
+          this.field.data[index][i] = 0;
+        }
+      } else if (index < this.field.row * 2) {
+        for(let i = 0; i < this.field.data.length; i++) {
+          this.field.data[i][index - this.field.row] = 0;
+        }
+      }
+    },
+
+    checkGameOver(fData, qData) {
+      for(let qIdx = 0; qIdx < this.brickQueue.data.length; qIdx++) {
+        for(let fRow = 0; fRow < this.field.data.length; fRow++) {
+          for(let fCol = 0; fCol < this.field.data[fRow].length; fCol++) {
+            let position = {
+              row: fRow,
+              col: fCol
+            }
+            console.log(qData[qIdx], position.row, position.col)
+            if(this.checkBrickCollision(position, qData[qIdx])) {
+              continue;
+            } else {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
     },
 
     /* Rendering */
@@ -332,6 +408,7 @@ export default {
 
       // mouse down
       this.canvas.addEventListener('mousedown', e => {
+        if(this.status === 0) return;
         this.mouse = {
           x: e.offsetX,
           y: e.offsetY
@@ -350,6 +427,7 @@ export default {
         }
       });
       this.canvas.addEventListener('mousemove', e => {
+        if(this.status === 0) return;
         if(this.isDrag) {
           this.mouse = {
             x: e.offsetX,
@@ -359,6 +437,7 @@ export default {
       });
       // mouse up to cancel drag
       this.canvas.addEventListener('mouseup', e => {
+        if(this.status === 0) return;
         // turn off drag mode
         this.isDrag = false;
         // get brick position
@@ -366,13 +445,19 @@ export default {
         if(this.checkInField(brickPos) && !this.checkBrickCollision(brickPos, this.cBrick.data)) {
           // put brick in field
           this.putBrickInField(brickPos, this.cBrick.data);
+          // check if field is full
+          this.checkFieldFull(this.field.data);
+          // check if game is over
+          if(this.checkGameOver(this.field.data, this.brickQueue.data)){
+            this.status = 0;
+          }
         } else {
           // recover the brick
           let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
           this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
         }
       });
-    }
+    },
   }
 }
 </script>
