@@ -33,11 +33,11 @@ export default {
         y: null,
         width: null,
         height: 100,
-        color: '#eedc00'
+        color: '#2e2d2d'
       },
       score: {                  // game score
         data: null,
-        color: '#2e2d2d',
+        color: '#f5f5f5',
         style: '900 36px Avenir, Helvetica, Arial, sans-serif',
         x: 30,
         y: 45,
@@ -74,7 +74,7 @@ export default {
       brick: {                  // brick preference
         size: 60,
         borderColor: '#fff',
-        color: '#2e2d2d'
+        color: '#eedc00'
       },
       cBrick: {                 // current brick
         size: null,
@@ -181,8 +181,10 @@ export default {
       // clear score
       this.score.data = 0;
       // clear field
+      let fieldGenerator = fieldGenerator || new FieldGenerator(this.field.row, this.field.col);
       this.field.data = fieldGenerator.generate();
       // refresh queue
+      this.brickQueue.data = [];
       this.refreshQueue();
       // start game
       this.start();
@@ -205,10 +207,6 @@ export default {
           y: this.mouse.y - this.cBrick.size / 2
         };
       }
-      // refresh queue if empty
-      this.refreshQueue();
-      // clean fulled field
-      this.cleanFullField();
     },
 
     render() {
@@ -348,19 +346,20 @@ export default {
     },
 
     cleanFullField() {
-      if(this.field.full.length === 0) return;
+      while(this.field.full.length > 0) {
         // get the field index
-      let index = this.field.full.shift();
-      if(index < this.field.row) {
-        for(let i = 0; i < this.field.data[index].length; i++) {
-          this.field.data[index][i] = 0;
+        let index = this.field.full.shift();
+        if(index < this.field.row) {
+          for(let i = 0; i < this.field.data[index].length; i++) {
+            this.field.data[index][i] = 0;
+          }
+          this.score.data += 10;
+        } else if (index < this.field.row * 2) {
+          for(let i = 0; i < this.field.data.length; i++) {
+            this.field.data[i][index - this.field.row] = 0;
+          }
+          this.score.data += 10;
         }
-        this.score.data += 10;
-      } else if (index < this.field.row * 2) {
-        for(let i = 0; i < this.field.data.length; i++) {
-          this.field.data[i][index - this.field.row] = 0;
-        }
-        this.score.data += 10;
       }
     },
 
@@ -371,8 +370,7 @@ export default {
             let position = {
               row: fRow,
               col: fCol
-            }
-            console.log(qData[qIdx], position.row, position.col)
+            };
             if(this.checkBrickCollision(position, qData[qIdx])) {
               continue;
             } else {
@@ -519,6 +517,10 @@ export default {
           this.putBrickInField(brickPos, this.cBrick.data);
           // check if field is full
           this.checkFieldFull(this.field.data);
+          // clean fulled field
+          this.cleanFullField();
+          // refresh queue if empty
+          this.refreshQueue();
           // check if game is over
           if(this.checkGameOver(this.field.data, this.brickQueue.data)){
             this.status = 0;
@@ -529,6 +531,17 @@ export default {
           this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
         }
       });
+      // mouse click to trigger restart
+      this.canvas.addEventListener('click', e => {
+        if(this.status !== 0) return;
+        let mouse = {
+          x: e.offsetX,
+          y: e.offsetY
+        }
+        if(mouse.x < this.restartBtn.x || mouse.x > this.restartBtn.x + this.restartBtn.width || mouse.y < this.restartBtn.y || mouse.y > this.restartBtn.y + this.restartBtn.height) return;
+
+        this.restart();
+      })
     },
   }
 }
