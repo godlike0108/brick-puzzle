@@ -511,10 +511,14 @@ export default {
         // turn off drag mode
         this.isDrag = false;
         // get brick position
+        if(this.cBrick.position === null) return;
         let brickPos = this.getMatchedPosition(this.cBrick.position);
         if(this.checkInField(brickPos) && !this.checkBrickCollision(brickPos, this.cBrick.data)) {
           // put brick in field
           this.putBrickInField(brickPos, this.cBrick.data);
+          // clear the current brick
+          this.cBrick.data = [];
+          this.cBrick.index = null;
           // check if field is full
           this.checkFieldFull(this.field.data);
           // clean fulled field
@@ -525,7 +529,7 @@ export default {
           if(this.checkGameOver(this.field.data, this.brickQueue.data)){
             this.status = 0;
           }
-        } else {
+        } else if(this.cBrick.data.length > 0){
           // recover the brick
           let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
           this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
