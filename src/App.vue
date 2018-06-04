@@ -35,7 +35,14 @@ export default {
         height: 100,
         color: '#eedc00'
       },
-      score: null,              // game score
+      score: {                  // game score
+        data: null,
+        color: '#2e2d2d',
+        style: '900 36px Avenir, Helvetica, Arial, sans-serif',
+        x: 30,
+        y: 45,
+        size: 36
+      },
       field: {                  // brick field
         x: null,
         y: null,
@@ -82,7 +89,7 @@ export default {
   methods: {
     init() {
       // set score
-      this.score = 0;
+      this.score.data = 0;
       // create brick field data
       let fieldGenerator = fieldGenerator || new FieldGenerator(this.field.row, this.field.col);
       this.field.data = fieldGenerator.generate();
@@ -128,6 +135,7 @@ export default {
       this.renderUI(this.menuBar);
       this.renderUI(this.field);
       this.renderUI(this.brickQueue);
+      this.renderScore();
 
       // hooking event handlers
       this.hookHandlers();
@@ -138,7 +146,7 @@ export default {
     },
     restart() {
       // clear score
-      this.score = 0;
+      this.score.data = 0;
       // clear field
       this.field.data = fieldGenerator.generate();
       // refresh queue
@@ -178,6 +186,7 @@ export default {
       this.renderUI(this.brickQueue);
       this.renderField(this.field.data);
       this.renderBrickQueue(this.brickQueue.data);
+      this.renderScore();
       if(this.isDrag) {
         // render current brick at mouse position
         this.renderCBrick(this.cBrick.data);
@@ -262,6 +271,7 @@ export default {
         for(let j = 0; j < data[i].length; j++) {
           if(data[i][j] === 1) {
             this.field.data[pos.row + i][pos.col + j] = 1;
+            this.score.data++;
           }
         }
       }
@@ -308,10 +318,12 @@ export default {
         for(let i = 0; i < this.field.data[index].length; i++) {
           this.field.data[index][i] = 0;
         }
+        this.score.data += 10;
       } else if (index < this.field.row * 2) {
         for(let i = 0; i < this.field.data.length; i++) {
           this.field.data[i][index - this.field.row] = 0;
         }
+        this.score.data += 10;
       }
     },
 
@@ -377,6 +389,13 @@ export default {
           }
         }
       })
+      this.ctx.restore();
+    },
+    renderScore() {
+      this.ctx.save();
+      this.ctx.font = this.score.style;
+      this.ctx.fillStyle = this.score.color;
+      this.ctx.fillText(`Score: ${this.score.data}`, this.menuBar.x + this.score.x, this.menuBar.y + this.score.y + this.score.size / 2);
       this.ctx.restore();
     },
     renderCBrick(data) {
