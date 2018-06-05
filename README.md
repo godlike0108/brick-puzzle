@@ -9,3 +9,9 @@ Put the bricks showing at bottom into the grid field. If a brick is successfully
 If there is no more room to put bricks, game over.
 
 Challenge the highest score as you can.
+
+## Change Log
+
+2018.6.5
+
+- Implement Level system, higher level makes larger bricks easier to generate
