@@ -20,6 +20,7 @@ export default {
       ctx: null,                // canvas context
       loop: null,               // game loop
       status: null,             // ingame: 1, gameover: 0
+      level: null,
       border: 20,               // border
       background: {
         x: null,
@@ -114,6 +115,8 @@ export default {
   },
   methods: {
     init() {
+      // set level
+      this.level = 0;
       // set score
       this.score.data = 0;
       // create brick field data
@@ -180,6 +183,8 @@ export default {
 
     },
     restart() {
+      // clear level
+      this.level = 0;
       // clear score
       this.score.data = 0;
       // clear field
@@ -484,6 +489,7 @@ export default {
 
       // mouse down
       this.canvas.addEventListener('mousedown', e => {
+        if(e.which !== 1) return;
         if(this.status === 0) return;
         this.mouse = {
           x: e.offsetX,
@@ -513,6 +519,7 @@ export default {
       });
       // mouse up to cancel drag
       this.canvas.addEventListener('mouseup', e => {
+        if(e.which !== 1) return;
         if(this.status === 0) return;
         // turn off drag mode
         this.isDrag = false;
