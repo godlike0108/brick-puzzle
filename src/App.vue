@@ -516,9 +516,6 @@ export default {
         if(this.checkInField(brickPos) && !this.checkBrickCollision(brickPos, this.cBrick.data)) {
           // put brick in field
           this.putBrickInField(brickPos, this.cBrick.data);
-          // clear the current brick
-          this.cBrick.data = [];
-          this.cBrick.index = null;
           // check if field is full
           this.checkFieldFull(this.field.data);
           // clean fulled field
@@ -534,6 +531,9 @@ export default {
           let recoveredBrick = JSON.parse(JSON.stringify(this.cBrick.data));
           this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
         }
+        // clear the current brick
+        this.cBrick.data = [];
+        this.cBrick.index = null;
       });
       // mouse click to trigger restart
       this.canvas.addEventListener('click', e => {
