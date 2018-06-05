@@ -64,7 +64,6 @@ class BrickGenerator {
     let rand = Math.floor(Math.random() * 100);
     type = this.curChance[level].findIndex(upperLimit => rand <= upperLimit);
     if(type === -1) {type = this.curChance[level].length}
-    console.log(this.curChance[level]);
     // choose brick direction
     direction = Math.floor(Math.random() * this.patterns[type].length);
     // generate new brick with pattern data

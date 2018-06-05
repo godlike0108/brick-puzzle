@@ -20,7 +20,6 @@ export default {
       ctx: null,                // canvas context
       loop: null,               // game loop
       status: null,             // ingame: 1, gameover: 0
-      level: null,
       brickGenerator: null,     // generate bricks
       border: 20,               // border
       background: {
@@ -42,6 +41,14 @@ export default {
         color: '#f5f5f5',
         style: '900 36px Avenir, Helvetica, Arial, sans-serif',
         x: 30,
+        y: 45,
+        size: 36
+      },
+      level: {                  // game level
+        data: null,
+        color: '#f5f5f5',
+        style: '900 36px Avenir, Helvetica, Arial, sans-serif',
+        x: null,
         y: 45,
         size: 36
       },
@@ -117,7 +124,7 @@ export default {
   methods: {
     init() {
       // set level
-      this.level = 0;
+      this.level.data = 0;
       // set score
       this.score.data = 0;
       // create brick field data
@@ -177,6 +184,7 @@ export default {
       this.renderUI(this.field);
       this.renderUI(this.brickQueue);
       this.renderScore();
+      this.renderLevel();
 
       // hooking event handlers
       this.hookHandlers();
@@ -187,7 +195,7 @@ export default {
     },
     restart() {
       // clear level
-      this.level = 0;
+      this.level.data = 0;
       // clear score
       this.score.data = 0;
       // clear field
@@ -228,6 +236,7 @@ export default {
       this.renderField(this.field.data);
       this.renderBrickQueue(this.brickQueue.data);
       this.renderScore();
+      this.renderLevel();
       if(this.isDrag) {
         // render current brick at mouse position
         this.renderCBrick(this.cBrick.data);
@@ -325,7 +334,7 @@ export default {
     refreshQueue() {
       if(this.brickQueue.data && this.brickQueue.data.length === 0) {
         for(let i = 0; i < this.brickQueue.length; i++) {
-          let newBrick = this.brickGenerator.generate(this.level);
+          let newBrick = this.brickGenerator.generate(this.level.data);
           this.brickQueue.data.push(newBrick);
         }
       }
@@ -373,7 +382,7 @@ export default {
     },
 
     upgradeLevel() {
-      this.level = Math.floor(this.score.data / 50);
+      this.level.data = Math.floor(this.score.data / 50);
     },
 
     checkGameOver(fData, qData) {
@@ -444,6 +453,14 @@ export default {
       this.ctx.font = this.score.style;
       this.ctx.fillStyle = this.score.color;
       this.ctx.fillText(`Score: ${this.score.data}`, this.menuBar.x + this.score.x, this.menuBar.y + this.score.y + this.score.size / 2);
+      this.ctx.restore();
+    },
+    renderLevel() {
+      this.ctx.save();
+      this.ctx.font = this.level.style;
+      this.ctx.fillStyle = this.level.color;
+      this.level.x = this.level.x || this.menuBar.width - this.ctx.measureText(this.level.text).width;
+      this.ctx.fillText(`Level: ${this.level.data}`, this.menuBar.x + this.level.x, this.menuBar.y + this.level.y + this.level.size / 2);
       this.ctx.restore();
     },
     renderCBrick(data) {
