@@ -42,26 +42,31 @@ class BrickGenerator {
     ],
 
     // brick appear chance
-    this.curChance = [];
+    this.curChance = [
+      [11, 22, 33, 44, 55, 66, 77, 88],
+      [9, 18, 30, 42, 54, 66, 77, 88],
+      [7, 14, 26, 38, 50, 62, 75, 87],
+      [5, 10, 23, 36, 49, 62, 75, 87],
+      [3, 6, 19, 32, 45, 58, 71, 84]
+    ];
+    // brick limit chance
+    this.limit = 4;
+    // chance delta
+    this.delta = 4;
+    // level limit
+    this.levelLimit = 4;
   }
 
-  initLevel() {
-    for(let i = 0; i < this.patterns.length; i++) {
-      this.curChance.push(Math.floor(100 / (this.patterns.length - 1)) * i);
-    }
-  }
-
-  upgradeLevel() {
-    if(this.curChance[0] > 1) {
-
-    }
-  }
-
-  generate() {
+  generate(level) {
+    if(level > this.levelLimit) {level = this.levelLimit;}
     let type, direction;
-    type = Math.floor(Math.random() * this.patterns.length);
+    // choose brick type
+    let rand = Math.floor(Math.random() * 100);
+    type = this.curChance[level].findIndex(upperLimit => rand <= upperLimit);
+    if(type === -1) {type = this.curChance[level].length}
+    console.log(this.curChance[level]);
+    // choose brick direction
     direction = Math.floor(Math.random() * this.patterns[type].length);
-
     // generate new brick with pattern data
     let chosenPattern = this.patterns[type][direction];
     let brick = chosenPattern.map(row => {

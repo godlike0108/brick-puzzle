@@ -21,6 +21,7 @@ export default {
       loop: null,               // game loop
       status: null,             // ingame: 1, gameover: 0
       level: null,
+      brickGenerator: null,     // generate bricks
       border: 20,               // border
       background: {
         x: null,
@@ -124,6 +125,8 @@ export default {
       this.field.data = fieldGenerator.generate();
       // init field fulled array
       this.field.full = [];
+      // load brick generator
+      this.brickGenerator = this.brickGenerator || new BrickGenerator();
       // create brick queue data
       this.brickQueue.data = [];
       this.refreshQueue();
@@ -321,9 +324,8 @@ export default {
 
     refreshQueue() {
       if(this.brickQueue.data && this.brickQueue.data.length === 0) {
-        let brickGenerator = brickGenerator || new BrickGenerator();
         for(let i = 0; i < this.brickQueue.length; i++) {
-          let newBrick = brickGenerator.generate();
+          let newBrick = this.brickGenerator.generate(this.level);
           this.brickQueue.data.push(newBrick);
         }
       }
@@ -368,6 +370,10 @@ export default {
           this.score.data += 10;
         }
       }
+    },
+
+    upgradeLevel() {
+      this.level = Math.floor(this.score.data / 50);
     },
 
     checkGameOver(fData, qData) {
@@ -533,6 +539,8 @@ export default {
           this.checkFieldFull(this.field.data);
           // clean fulled field
           this.cleanFullField();
+          // upgrade Level
+          this.upgradeLevel();
           // refresh queue if empty
           this.refreshQueue();
           // check if game is over
