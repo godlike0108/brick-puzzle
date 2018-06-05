@@ -88,9 +88,10 @@ export default {
         width: null,
         height: null,
         color: '#f00',
-        textX: 30,
-        textY: 160,
+        textX: null,
+        textY: null,
         textColor: '#fff',
+        textSize: 72,
         style: '900 72px Avenir, Helvetica, Arial, sans-serif',
         text: 'GAME OVER'
       },
@@ -100,9 +101,10 @@ export default {
         width: null,
         height: 60,
         color: '#eedc00',
-        textX: 26,
-        textY: 44,
+        textX: null,
+        textY: null,
         textColor: '#2e2d2d',
+        textSize: 36,
         style: '900 36px Avenir, Helvetica, Arial, sans-serif',
         text: 'RESTART'
       },
@@ -455,7 +457,9 @@ export default {
       this.renderUI(this.gameOver);
       this.ctx.font = this.gameOver.style;
       this.ctx.fillStyle = this.gameOver.textColor;
-      this.ctx.fillText(this.gameOver.text, this.gameOver.x + this.gameOver.textX, this.gameOver.y + this.gameOver.textY);
+      this.gameOver.textX = this.gameOver.textX || this.gameOver.x + this.gameOver.width / 2 - this.ctx.measureText(this.gameOver.text).width / 2;
+      this.gameOver.textY = this.gameOver.textY || this.gameOver.y + this.gameOver.height / 4 + this.gameOver.textSize / 3;
+      this.ctx.fillText(this.gameOver.text, this.gameOver.textX, this.gameOver.textY);
       this.ctx.restore();
     },
     renderRestartBtn() {
@@ -463,7 +467,9 @@ export default {
       this.renderUI(this.restartBtn);
       this.ctx.font = this.restartBtn.style;
       this.ctx.fillStyle = this.restartBtn.textColor;
-      this.ctx.fillText(this.restartBtn.text, this.restartBtn.x + this.restartBtn.textX, this.restartBtn.y + this.restartBtn.textY);
+      this.restartBtn.textX = this.restartBtn.textX || this.restartBtn.x + this.restartBtn.width / 2 - this.ctx.measureText(this.restartBtn.text).width / 2;
+      this.restartBtn.textY = this.restartBtn.textY || this.restartBtn.y + this.restartBtn.height / 2 + this.restartBtn.textSize / 3;
+      this.ctx.fillText(this.restartBtn.text, this.restartBtn.textX, this.restartBtn.textY);
       this.ctx.restore();
     },
     /* Handlers */
