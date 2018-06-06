@@ -59,6 +59,17 @@ export default {
         y: 20,
         size: 36
       },
+      timeBar: {                // menuBar settings
+        x: null,
+        y: 80,
+        width: null,
+        height: 20,
+        color: {
+          r: 255,
+          g: 255,
+          b: 0
+        }
+      },
       field: {                  // brick field
         x: null,
         y: null,
@@ -168,6 +179,9 @@ export default {
       this.menuBar.x = this.border;
       this.menuBar.y = this.border;
       this.menuBar.width = this.brick.size * this.field.col;
+      // set menuBar UI
+      this.timeBar.x = this.border;
+      this.timeBar.width = this.menuBar.width;
       // set brick field UI
       this.field.x = this.border;
       this.field.y = this.border + this.menuBar.height;
@@ -200,6 +214,7 @@ export default {
       this.renderUI(this.brickQueue);
       this.renderScore();
       this.renderLevel();
+      this.renderTimeBar();
 
       // hooking event handlers
       this.hookHandlers();
@@ -243,10 +258,11 @@ export default {
       if(timestamp > this.trigT && this.status 
         !== 0) {
         this.time -= 1000;
-        console.log(this.time)
 
         // update trigT
         this.trigT = timestamp + this.freqT;
+        // update time bar
+        this.updateTimeBar();
       }
 
       if(this.time <= 0) {
@@ -261,6 +277,7 @@ export default {
           y: this.mouse.y - this.cBrick.size / 2
         };
       }
+
     },
 
     render() {
@@ -273,6 +290,7 @@ export default {
       this.renderBrickQueue(this.brickQueue.data);
       this.renderScore();
       this.renderLevel();
+      this.renderTimeBar();
       if(this.isDrag) {
         // render current brick at mouse position
         this.renderCBrick(this.cBrick.data);
@@ -371,6 +389,11 @@ export default {
       this.time = this.levelT * 1000;
     },
 
+    updateTimeBar() {
+      this.timeBar.width = this.menuBar.width * (this.time / (this.levelT * 1000));
+      this.timeBar.color.g = Math.floor(255 * (this.time / (this.levelT * 1000)));
+    },
+
     refreshQueue() {
       if(this.brickQueue.data && this.brickQueue.data.length === 0) {
         for(let i = 0; i < this.brickQueue.length; i++) {
@@ -450,6 +473,12 @@ export default {
       this.ctx.save();
       this.ctx.fillStyle = part.color;
       this.ctx.fillRect(part.x, part.y, part.width, part.height);
+      this.ctx.restore();
+    },
+    renderTimeBar() {
+      this.ctx.save();
+      this.ctx.fillStyle = `rgb(${this.timeBar.color.r}, ${this.timeBar.color.g}, ${this.timeBar.color.b})`;
+      this.ctx.fillRect(this.timeBar.x, this.timeBar.y, this.timeBar.width, this.timeBar.height);
       this.ctx.restore();
     },
     // render brick status
