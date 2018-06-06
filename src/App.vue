@@ -642,6 +642,7 @@ export default {
           this.brickQueue.data.splice(this.cBrick.index, 0, recoveredBrick);
         }
         // clear the current brick
+        this.cBrick.position = null;
         this.cBrick.data = [];
         this.cBrick.index = null;
       });
