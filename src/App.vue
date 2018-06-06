@@ -574,11 +574,11 @@ export default {
     // hook event handlers
     hookHandlers() {
       // pause
-      window.addEventListener('keyup', e => {
-        if(e.keyCode === 80) {
-          this.togglePause()
-        }
-      });
+      // window.addEventListener('keyup', e => {
+      //   if(e.keyCode === 80) {
+      //     this.togglePause()
+      //   }
+      // });
 
       // mouse down
       this.canvas.addEventListener('mousedown', e => {
