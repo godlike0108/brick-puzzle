@@ -584,6 +584,7 @@ export default {
       this.canvas.addEventListener('mousedown', e => {
         if(e.which !== 1) return;
         if(this.status === 0) return;
+        if(this.isDrag === true) return;
         this.mouse = {
           x: e.offsetX,
           y: e.offsetY
