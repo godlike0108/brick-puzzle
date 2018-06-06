@@ -14,4 +14,11 @@ Challenge the highest score as you can.
 
 2018.6.5
 
-- Implement Level system, higher level makes larger bricks easier to generate
+- Add Level system, higher level makes larger bricks easier to generate
+
+2018.6.6
+
+- Add count down system
+  - if time reach the end, game over
+  - if player successfully put brick into field, refresh timeleft to initial state
+  - round time will become shorter in higher level
