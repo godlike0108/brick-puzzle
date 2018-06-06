@@ -22,6 +22,13 @@ export default {
       status: null,             // ingame: 1, gameover: 0
       brickGenerator: null,     // generate bricks
       border: 20,               // border
+      time: null,               // current time of each round
+      maxT: 30,                 // max limit time
+      minT: 3,                  // min limit time
+      levelT: null,              // max time of current level
+      freqT: 1000,              // frequency of round time change
+      trigT: null,              // timestamp which triggers time change,
+      scorePerLevel: 100,
       background: {
         x: null,
         y: null,
@@ -41,7 +48,7 @@ export default {
         color: '#f5f5f5',
         style: '900 36px Avenir, Helvetica, Arial, sans-serif',
         x: 30,
-        y: 45,
+        y: 20,
         size: 36
       },
       level: {                  // game level
@@ -49,7 +56,7 @@ export default {
         color: '#f5f5f5',
         style: '900 36px Avenir, Helvetica, Arial, sans-serif',
         x: null,
-        y: 45,
+        y: 20,
         size: 36
       },
       field: {                  // brick field
@@ -123,10 +130,18 @@ export default {
   },
   methods: {
     init() {
+      // init total time
+      this.totalT = 0;
       // set level
       this.level.data = 0;
       // set score
       this.score.data = 0;
+      // init level time
+      this.levelT = this.maxT;
+      // set player time
+      this.time = this.levelT * 1000;
+      // set player time trigger point
+      this.trigT = this.freqT;
       // create brick field data
       let fieldGenerator = fieldGenerator || new FieldGenerator(this.field.row, this.field.col);
       this.field.data = fieldGenerator.generate();
@@ -194,6 +209,12 @@ export default {
 
     },
     restart() {
+      // reset player round trigger time
+      this.trigT = this.freqT;
+      // reset level time
+      this.levelT = this.maxT;
+      // set player time
+      this.time = this.levelT * 1000;
       // clear level
       this.level.data = 0;
       // clear score
@@ -208,16 +229,31 @@ export default {
       this.start();
     },
     /*.game loop */
-    game() {
-
-      this.update();
+    game(timestamp) {
+      
+      this.update(timestamp);
       this.render();
 
-      this.loop = requestAnimationFrame(this.game)
+      this.loop = requestAnimationFrame(this.game);
 
     },
 
-    update() {
+    update(timestamp) {
+      // round time change with specific frequency
+      if(timestamp > this.trigT && this.status 
+        !== 0) {
+        this.time -= 1000;
+        console.log(this.time)
+
+        // update trigT
+        this.trigT = timestamp + this.freqT;
+      }
+
+      if(this.time <= 0) {
+        // game over
+        this.status = 0;
+      }
+
       // update current brick position if dragging
       if(this.isDrag) {
         this.cBrick.position = {
@@ -331,6 +367,10 @@ export default {
       }
     },
 
+    updateRoundTime() {
+      this.time = this.levelT * 1000;
+    },
+
     refreshQueue() {
       if(this.brickQueue.data && this.brickQueue.data.length === 0) {
         for(let i = 0; i < this.brickQueue.length; i++) {
@@ -382,7 +422,8 @@ export default {
     },
 
     upgradeLevel() {
-      this.level.data = Math.floor(this.score.data / 50);
+      this.level.data = Math.floor(this.score.data / this.scorePerLevel);
+      this.levelT = this.minT + (this.maxT - this.minT) / (this.level.data + 1);
     },
 
     checkGameOver(fData, qData) {
@@ -560,6 +601,8 @@ export default {
           this.upgradeLevel();
           // refresh queue if empty
           this.refreshQueue();
+          // update round Time
+          this.updateRoundTime();
           // check if game is over
           if(this.checkGameOver(this.field.data, this.brickQueue.data)){
             this.status = 0;
